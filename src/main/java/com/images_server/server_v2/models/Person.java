@@ -16,19 +16,25 @@ public class Person {
 
     private int numberOfImages;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "race_id")
+    private Race race;
+
     public Person() {
     }
 
-    public Person(String name, boolean male, int numberOfImages) {
+    public Person(String name, boolean male, Race race, int numberOfImages) {
         this.name = name;
         this.male = male;
         this.numberOfImages = numberOfImages;
+        this.race = race;
     }
 
-    public Person(String name, boolean male) {
+    public Person(String name, boolean male, Race race) {
         this.name = name;
         this.male = male;
         this.numberOfImages = 0;
+        this.race = race;
     }
 
     public Person(String name) {
@@ -67,5 +73,13 @@ public class Person {
 
     public void setNumberOfImages(int numberOfImages) {
         this.numberOfImages = numberOfImages;
+    }
+
+    public Race getRace() {
+        return race;
+    }
+
+    public void setRace(Race race) {
+        this.race = race;
     }
 }

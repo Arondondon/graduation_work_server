@@ -3,12 +3,15 @@ package com.images_server.server_v2.services;
 import com.images_server.server_v2.models.Image;
 import com.images_server.server_v2.models.Person;
 import com.images_server.server_v2.models.Property;
+import com.images_server.server_v2.models.Race;
 import com.images_server.server_v2.properties.WarningTextProperty;
 import com.images_server.server_v2.repositories.ImageRepo;
 import com.images_server.server_v2.repositories.PersonRepo;
 import com.images_server.server_v2.repositories.PropertyRepo;
+import com.images_server.server_v2.repositories.RaceRepo;
 import com.images_server.server_v2.responses.PersonResponse;
 import com.images_server.server_v2.responses.PropertyResponse;
+import com.images_server.server_v2.responses.RacesResponse;
 import com.images_server.server_v2.responses.ResponseToUpload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +43,9 @@ public class ImagesDBService implements DBService {
     @Autowired
     private PropertyRepo propertyRepo;
 
+    @Autowired
+    private RaceRepo raceRepo;
+
     private boolean checkPersonAndProperties(String personName, String[] properties) {
         for (String property : properties) {
             if (!propertyRepo.existsByName(property))
@@ -60,13 +66,14 @@ public class ImagesDBService implements DBService {
     public ResponseToUpload saveImage(MultipartFile file, String personName, String[] properties) {
         String name = StringUtils.cleanPath(file.getOriginalFilename());
         if (!checkPersonAndProperties(personName, properties))
-            return new ResponseToUpload("", personName, false, properties, null,
-                    null, 0, missingPersonOrProperty);
+            return new ResponseToUpload("", personName, false, null, properties, null,
+                    missingPersonOrProperty);
         else if (imageRepo.existsByFilename(name)){
             Image existedImage = imageRepo.findByFilename(name).get();
             return new ResponseToUpload(existedImage.getFilename(), existedImage.getPerson().getName(),
-                    existedImage.getPerson().isMale(), existedImage.getProperties().toArray(new String[0]),
-                    existedImage.getUri(), file.getContentType(), file.getSize(), imageAlreadyExists);
+                    existedImage.getPerson().isMale(), existedImage.getPerson().getRace().getName(),
+                    existedImage.getProperties().toArray(new String[0]),
+                    existedImage.getUri(), imageAlreadyExists);
         }
 
 
@@ -85,8 +92,8 @@ public class ImagesDBService implements DBService {
 
         imageRepo.save(image);
 
-        return new ResponseToUpload(name, personName, person.isMale(), properties, uri,
-                file.getContentType(), file.getSize(), "");
+        return new ResponseToUpload(name, personName, person.isMale(),
+                person.getRace().getName(), properties, uri, "");
     }
 
     public Person updateNumberOfImagesOfPerson(String personName){
@@ -97,13 +104,13 @@ public class ImagesDBService implements DBService {
     }
 
     @Override
-    public PersonResponse savePerson(String name, String gender) {
+    public PersonResponse savePerson(String name, String gender, String race) {
         if (personRepo.existsByName(name))
             return new PersonResponse(name, gender, personAlreadyExists,
-                    personRepo.findByName(name).get().getNumberOfImages());
+                    personRepo.findByName(name).get().getNumberOfImages(), race);
         else {
-            personRepo.save(new Person(name, gender.equals("male"), 0));
-            return new PersonResponse(name, gender, "", 0);
+            personRepo.save(new Person(name, gender.equals("male"), raceRepo.findByName(race).get()));
+            return new PersonResponse(personRepo.findByName(name).get());
         }
     }
 
@@ -117,6 +124,24 @@ public class ImagesDBService implements DBService {
                 exists = true;
         }
         return new PropertyResponse(properties, exists ? somePropertiesAlreadyExist : "");
+    }
+
+    @Override
+    public RacesResponse saveRaces(String [] races){
+        for (String race : races) {
+            if (!raceRepo.existsByName(race))
+                raceRepo.save(new Race(race));
+        }
+        return new RacesResponse(races);
+    }
+
+    @Override
+    public PersonResponse updatePerson(String name, String gender, String race){
+        Person person = personRepo.findByName(name).get();
+        person.setMale(gender.equals("male"));
+        person.setRace(raceRepo.findByName(race).get());
+        personRepo.save(person);
+        return new PersonResponse(person);
     }
 
 

@@ -4,9 +4,11 @@ package com.images_server.server_v2.controllers;
 
 import com.images_server.server_v2.models.Image;
 import com.images_server.server_v2.models.Property;
+import com.images_server.server_v2.models.Race;
 import com.images_server.server_v2.repositories.ImageRepo;
 import com.images_server.server_v2.repositories.PersonRepo;
 import com.images_server.server_v2.repositories.PropertyRepo;
+import com.images_server.server_v2.repositories.RaceRepo;
 import com.images_server.server_v2.responses.*;
 import com.images_server.server_v2.services.DBService;
 import com.images_server.server_v2.services.StorageService;
@@ -20,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,20 +44,25 @@ public class MainController {
     @Autowired
     private PropertyRepo propertyRepo;
 
+    @Autowired
+    private RaceRepo raceRepo;
+
     @PostMapping("/add-person")
     public PersonResponse addPerson(@RequestParam("name") String name,
-                                          @RequestParam("gender") String gender) {
+                                    @RequestParam("gender") String gender,
+                                    @RequestParam("race") String race) {
 
-        return dbService.savePerson(name, gender);
+        return dbService.savePerson(name, gender, race);
     }
 
     @PostMapping("/add-persons")
     public List<PersonResponse> addPersons(@RequestParam("names") String[] names,
-                                           @RequestParam("genders") String[] genders) {
+                                           @RequestParam("genders") String[] genders,
+                                           @RequestParam("races") String[] races) {
 
         List<PersonResponse> responses = new ArrayList<>();
         for (int i = 0; i < names.length; i++) {
-            responses.add(dbService.savePerson(names[i], genders[i]));
+            responses.add(dbService.savePerson(names[i], genders[i], races[i]));
         }
 
         return responses;
@@ -68,6 +74,13 @@ public class MainController {
         return personRepo.findAll().stream()
                 .map(PersonResponse::new)
                 .toList();
+    }
+
+    @PostMapping("/update-person")
+    public PersonResponse updatePerson(@RequestParam("name") String name,
+                                       @RequestParam("gender") String gender,
+                                       @RequestParam("race") String race) {
+        return dbService.updatePerson(name, gender, race);
     }
 
     @PostMapping("/add-properties")
@@ -94,6 +107,29 @@ public class MainController {
         return new PropertyResponse(stringProperties, "");
     }
 
+    @PostMapping("/add-races")
+    public RacesResponse addRaces(@RequestParam("races") String [] races) {
+
+        return dbService.saveRaces(races);
+    }
+
+    @GetMapping("/get-races")
+    public RacesResponse getRaces() {
+
+        Iterable<Race> races = raceRepo.findAll();
+        int n = 0;
+        for (Race race : races) {
+            n++;
+        }
+        String [] stringRaces = new String[n];
+        int i = 0;
+        for (Race race : races) {
+            stringRaces[i] = race.getName();
+            i++;
+        }
+        return new RacesResponse(stringRaces);
+    }
+
     @PostMapping("/upload")
     public ResponseToUpload uploadFile(@RequestParam("file") MultipartFile file,
                                    @RequestParam("personName") String personName,
@@ -101,21 +137,6 @@ public class MainController {
 
         return dbService.saveImage(file, personName, properties);
     }
-
-    /**
-    @PostMapping("/upload-file")
-    public FileResponse uploadFile(@RequestParam("file") MultipartFile file) {
-        String name = storageService.store(file);
-
-        String uri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/download/")
-                .path(name)
-                .toUriString();
-
-        return new FileResponse(name, uri, file.getContentType(), file.getSize());
-    }
-     */
-
 
     @GetMapping("/download/{filename:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
@@ -169,6 +190,12 @@ public class MainController {
             images = imageRepo.findAll();
 
         return new ImagesUrisResponse(images.stream().map(Image::getUri).toArray(String[]::new));
+    }
+
+    @GetMapping("/get-image-info")
+    public ResponseToUpload getImageInfo(@RequestParam("filename") String filename) {
+
+        return new ResponseToUpload(imageRepo.findByFilename(filename).get(), "");
     }
 
     /**
