@@ -1,6 +1,9 @@
 package com.images_server.server_v2.responses;
 
 
+import com.images_server.server_v2.models.Image;
+import com.images_server.server_v2.models.Property;
+
 public class ResponseToUpload {
     private String filename;
     private String person;
@@ -18,6 +21,17 @@ public class ResponseToUpload {
         this.gender = isMale ? "male" : "female";
         this.properties = properties;
         this.uri = uri;
+        this.type = type;
+        this.size = size;
+        this.comment = comment;
+    }
+
+    public ResponseToUpload(Image image, String type, long size, String comment) {
+        this.filename = image.getFilename();
+        this.person = image.getPerson().getName();
+        this.gender = image.getPerson().isMale() ? "male" : "female";
+        this.properties = image.getProperties().stream().map(Property::getName).toArray(String[]::new);
+        this.uri = image.getUri();
         this.type = type;
         this.size = size;
         this.comment = comment;

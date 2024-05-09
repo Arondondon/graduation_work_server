@@ -8,6 +8,7 @@ public class WarningTextProperty {
     private String missingPersonOrProperty;
     private String personAlreadyExists;
     private String somePropertiesAlreadyExist;
+    private String imageAlreadyExists;
 
     public String getMissingPersonOrProperty() {
         return missingPersonOrProperty;
@@ -31,5 +32,13 @@ public class WarningTextProperty {
 
     public void setSomePropertiesAlreadyExist(String somePropertiesAlreadyExist) {
         this.somePropertiesAlreadyExist = somePropertiesAlreadyExist;
+    }
+
+    public String getImageAlreadyExists() {
+        return imageAlreadyExists;
+    }
+
+    public void setImageAlreadyExists(String imageAlreadyExists) {
+        this.imageAlreadyExists = imageAlreadyExists;
     }
 }

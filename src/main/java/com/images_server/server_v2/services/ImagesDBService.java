@@ -12,11 +12,13 @@ import com.images_server.server_v2.responses.PropertyResponse;
 import com.images_server.server_v2.responses.ResponseToUpload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 
 @Service
 public class ImagesDBService implements DBService {
@@ -24,6 +26,7 @@ public class ImagesDBService implements DBService {
     private final String missingPersonOrProperty;
     private final String personAlreadyExists;
     private final String somePropertiesAlreadyExist;
+    private final String imageAlreadyExists;
 
     @Autowired
     private StorageService storageService;
@@ -50,15 +53,24 @@ public class ImagesDBService implements DBService {
         this.missingPersonOrProperty = properties.getMissingPersonOrProperty();
         this.personAlreadyExists = properties.getPersonAlreadyExists();
         this.somePropertiesAlreadyExist = properties.getSomePropertiesAlreadyExist();
+        this.imageAlreadyExists = properties.getImageAlreadyExists();
     }
 
     @Override
     public ResponseToUpload saveImage(MultipartFile file, String personName, String[] properties) {
+        String name = StringUtils.cleanPath(file.getOriginalFilename());
         if (!checkPersonAndProperties(personName, properties))
             return new ResponseToUpload("", personName, false, properties, null,
                     null, 0, missingPersonOrProperty);
+        else if (imageRepo.existsByFilename(name)){
+            Image existedImage = imageRepo.findByFilename(name).get();
+            return new ResponseToUpload(existedImage.getFilename(), existedImage.getPerson().getName(),
+                    existedImage.getPerson().isMale(), existedImage.getProperties().toArray(new String[0]),
+                    existedImage.getUri(), file.getContentType(), file.getSize(), imageAlreadyExists);
+        }
 
-        String name = storageService.store(file);
+
+        name = storageService.store(file);
         String uri = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/download/")
                 .path(name)
@@ -99,10 +111,10 @@ public class ImagesDBService implements DBService {
     public PropertyResponse saveProperties(String [] properties) {
         boolean exists = false;
         for (String property : properties) {
-            if (!propertyRepo.existsByName(property)) {
+            if (!propertyRepo.existsByName(property))
                 propertyRepo.save(new Property(property));
+            else
                 exists = true;
-            }
         }
         return new PropertyResponse(properties, exists ? somePropertiesAlreadyExist : "");
     }

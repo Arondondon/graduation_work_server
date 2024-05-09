@@ -16,4 +16,12 @@ public interface ImageRepo extends JpaRepository<Image, Long> {
 
     Optional<Image> findByFilename(String filename);
 
+    boolean existsByFilename(String filename);
+
+    List<Image> findByPerson_Name(String name);
+
+    List<Image> findByPerson_Male(boolean isMale);
+
+    List<Image> findByProperties_Name(String name);
+
 }
