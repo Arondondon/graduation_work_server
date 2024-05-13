@@ -3,6 +3,7 @@ package com.images_server.server_v2.controllers;
 
 
 import com.images_server.server_v2.models.Image;
+import com.images_server.server_v2.models.Person;
 import com.images_server.server_v2.models.Property;
 import com.images_server.server_v2.models.Race;
 import com.images_server.server_v2.repositories.ImageRepo;
@@ -198,19 +199,33 @@ public class MainController {
         return new ResponseToUpload(imageRepo.findByFilename(filename).get(), "");
     }
 
-    /**
-    @GetMapping("/get-images-by-person-name-and-option")
-    public ImagesUrisResponse getImagesByMultipleOptions(@RequestParam("personName") String personName,
-                                                         @RequestParam("option") String option,
-                                                         @RequestParam("value") String value) {
+    @GetMapping("/get-all-images-info")
+    public List<ResponseToUpload> getAllImagesInfo() {
 
-        for (Map.Entry<String, String> entry : pathVars.entrySet()) {
-
-        }
-        List<Image> images;
+        return imageRepo.findAll().stream()
+                .map(ResponseToUpload::new)
+                .toList();
     }
-     */
 
+    @GetMapping("/get-images-info-by-testing-option/{option}")
+    public List<ResponseToUpload> getImagesByTestingOption(@PathVariable("option") String option) {
 
+        List<Person> persons = personRepo.findByImages_Properties_Name(option);
 
+        List<Image> images = new ArrayList<>();
+
+        for (Person person : persons) {
+            images.addAll(person.getImages());
+        }
+
+        return images.stream()
+                .map(ResponseToUpload::new)
+                .toList();
+    }
+
+    @GetMapping("/get-count-of-images-by-property/{property}")
+    public NumericalResponse getCountOfImagesByProperty(@PathVariable("property") String property) {
+
+        return new NumericalResponse(imageRepo.countByProperties_Name(property));
+    }
 }

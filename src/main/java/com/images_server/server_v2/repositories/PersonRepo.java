@@ -20,4 +20,8 @@ public interface PersonRepo extends JpaRepository<Person, Long> {
     Optional<Person> findTopByOrderByNumberOfImagesDesc();
 
     boolean existsByName(String name);
+
+    List<Person> findByImages_Properties_Name(String name);
+
+
 }

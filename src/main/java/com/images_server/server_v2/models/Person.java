@@ -2,6 +2,9 @@ package com.images_server.server_v2.models;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "persons")
 public class Person {
@@ -19,6 +22,9 @@ public class Person {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "race_id")
     private Race race;
+
+    @OneToMany(mappedBy = "person")
+    private Set<Image> images = new HashSet<>();
 
     public Person() {
     }
@@ -81,5 +87,13 @@ public class Person {
 
     public void setRace(Race race) {
         this.race = race;
+    }
+
+    public Set<Image> getImages() {
+        return images;
+    }
+
+    public void setImages(Set<Image> images) {
+        this.images = images;
     }
 }

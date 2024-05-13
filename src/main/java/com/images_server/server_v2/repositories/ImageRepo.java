@@ -24,4 +24,8 @@ public interface ImageRepo extends JpaRepository<Image, Long> {
 
     List<Image> findByProperties_Name(String name);
 
+    long countByProperties_Name(String name);
+
+
+
 }

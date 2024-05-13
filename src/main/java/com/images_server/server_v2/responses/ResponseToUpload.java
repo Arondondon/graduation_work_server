@@ -34,6 +34,16 @@ public class ResponseToUpload {
         this.comment = comment;
     }
 
+    public ResponseToUpload(Image image) {
+        this.filename = image.getFilename();
+        this.person = image.getPerson().getName();
+        this.gender = image.getPerson().isMale() ? "male" : "female";
+        this.race = image.getPerson().getRace().getName();
+        this.properties = image.getProperties().stream().map(Property::getName).toArray(String[]::new);
+        this.uri = image.getUri();
+        this.comment = "";
+    }
+
     public String getFilename() {
         return filename;
     }
